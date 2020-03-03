@@ -166,13 +166,14 @@ pyramid_plot<- function(data, title="", significance=0.05, plot_insig=TRUE, rsq_
     xlab("Number of years in window")+
     scale_x_continuous(lim=c(3, maxyears))+
     labs(caption = caption_plot)+
-    theme(plot.title = element_text(size=22))+
-    theme(axis.title.x = element_text(size=17, face = "bold"))+
-    theme(axis.title.y = element_text(size=17, face = "bold"))+
-    theme(axis.text = element_text(size=14))+
-    theme(legend.text = element_text(size = 12))+
-    theme(legend.title = element_text(size = 14))+
+    theme(plot.title = element_text(size=27))+
+    theme(axis.title.x = element_text(size=23, face = "bold"))+
+    theme(axis.title.y = element_text(size=23, face = "bold"))+
+    theme(axis.text = element_text(size=18))+
+    theme(legend.text = element_text(size = 15))+
+    theme(legend.title = element_text(size = 17))+
     theme(plot.caption = element_text(size = 14,hjust = 0.5,margin = margin(7,0,0,0,unit = "pt")))+
+    theme(legend.position = c(0.9, 0.9)) +
     coord_flip()
   return(plot)
 }
