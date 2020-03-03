@@ -9,6 +9,37 @@
 #use this test data set to build stuff
 test<-read.csv(file="https://raw.githubusercontent.com/BahlaiLab/bad_breakup_2/master/R_model/test.csv", header=TRUE)
 
+#######################
+#make sure required packages are installed
+
+#we need ggplot2, animation
+
+if(require("ggplot2")){
+  print("done")
+} else {
+  print("trying to install ggplot2")
+  install.packages("ggplot2")
+  if(require(ggplot2)){
+    print("ggplot2 installed and loaded")
+  } else {
+    stop("could not install ggplot2")
+  }
+}
+if(require("animation")){
+  print("done")
+} else {
+  print("trying to install animation")
+  install.packages("animation")
+  if(require(animation)){
+    print("animation installed and loaded")
+  } else {
+    stop("could not install animation")
+  }
+}
+
+
+#######################
+
 # set it so we get our decimal places rather than sci notation in our outputs
 options(scipen=10)
 
@@ -29,7 +60,7 @@ standardize<-function(data){
 }
 
 #try it on test data
-test1<-standardize(test)
+###test1<-standardize(test)
 #seems to be functioning
 
 # next we need a function that runs a simple linear model of x=year, y=response variable
@@ -43,14 +74,17 @@ linefit<-function (data){
             length(unique(data$year)), #number of years the analysis includes
             summary(model)$coefficients[2,1], # slope
             summary(model)$coefficients[2,2], # se for slope
-            summary(model)$coefficients[2,4], #p value
+            summary(model)$coefficients[2,4], #p value slope
+            summary(model)$coefficients[1,1], # intercept
+            summary(model)$coefficients[1,2], # se for intercept
+            summary(model)$coefficients[1,4], # p value for intercept
             summary(model)$r.squared, #r-squared
             summary(model)$adj.r.squared) #adjusted r-squared
   return(output)
 }
 
 #and try this on test data
-linefit(test1)
+###linefit(test1)
 # functional!
 
 #now we need to think about how to iterate through the dataset. We want a
@@ -67,6 +101,9 @@ breakup<-function(data, window){ #window is the size of the window we want to us
                      slope=numeric(0), 
                      slope_se=numeric(0), 
                      p_value=numeric(0),
+                     intercept=numeric(0), 
+                     intercept_se=numeric(0), 
+                     intercept_p_value=numeric(0),
                      r_square=numeric(0),
                      adj_r_square=numeric(0))
   numyears<-length(unique(data$year))
@@ -84,12 +121,12 @@ breakup<-function(data, window){ #window is the size of the window we want to us
     numyears<-length(unique(remaining$year))
   }
   names(output)<-c("start_year", "N_data", "N_years", "slope", "slope_se", "p_value",
-                   "r_square", "adj_r_square")
+                   "intercept", "intercept_se", "intercept_p_value","r_square", "adj_r_square")
   return(output)#output the data frame
 }
 
 #and now try this on the test data
-breakup(test1, 3)
+###breakup(test1, 3)
 
 # now time to write the function that will iterate through our targetted windows
 # let's make a decision rule that our test data set must be greater than 10y in length
@@ -105,6 +142,9 @@ multiple_breakups<-function(data){
                      slope=numeric(0), 
                      slope_se=numeric(0), 
                      p_value=numeric(0),
+                     intercept=numeric(0), 
+                     intercept_se=numeric(0), 
+                     intercept_p_value=numeric(0),
                      r_square=numeric(0),
                      adj_r_square=numeric(0))
   for(i in 3:(count-1)){
@@ -117,7 +157,7 @@ multiple_breakups<-function(data){
   return(out)
 }
 
-test2<-multiple_breakups(test)
+###test2<-multiple_breakups(test)
 #fan-flipping-tastic! it looks like that works
 
 
@@ -178,9 +218,7 @@ pyramid_plot<- function(data, title="", significance=0.05, plot_insig=TRUE, rsq_
   return(plot)
 }
 
-pyramid_plot(test, title="test plot", plot_insig = TRUE, significance=0.05, rsq_points =TRUE, caption_plot = "hey")
-
-
+###pyramid_plot(test, title="test plot", plot_insig = TRUE, significance=0.05, rsq_points =TRUE)
 
 #now that we have visualization, we need a way to pull relevant metrics out of the computation
 #so let's say our longest series is our 'truth', and we want to know how many years it takes 
@@ -214,7 +252,7 @@ stability_time<-function(data, min_percent=95, error_multiplyer=1){#returns a nu
 }
 
 #and a test
-stability_time(test, error_multiplyer = 1.5)
+###stability_time(test, error_multiplyer = 1)
 
 #now a function that finds the absoloute range of findings, and the absolute 
 #range of significant findings
@@ -234,7 +272,7 @@ abs_range<- function(data, only_significant=FALSE, significance=0.05){#returns a
 }
 
 #and try it out
-abs_range(test, only_significant = FALSE, significance = 0.05)
+###abs_range(test, only_significant = FALSE, significance = 0.05)
 
 #now we want to find the absolute over and under estimate compared to the slope of the 
 #longest series
@@ -255,7 +293,7 @@ relative_range<- function(data, only_significant=FALSE, significance=0.05){#retu
   
 }
 
-relative_range(test, only_significant = FALSE, significance = 0.05)
+###relative_range(test, only_significant = FALSE, significance = 0.05)
 
 #proportion significant- finds the proportion of total windows with statistically significant values
 
@@ -269,10 +307,11 @@ proportion_significant<- function(data, significance=0.05){#returns a single val
   
 }
 
-proportion_significant(test, significance=0.05)
+###proportion_significant(test, significance=0.05)
 
 #proportion significantly wrong- we're going to define this as 'directionally wrong'
 #where there is a significant relationship that does not match the direction of the true slope
+
 
 proportion_wrong<- function(data, significance=0.05){#returns a single value between 0 and 1
   test<-multiple_breakups(data)
@@ -295,7 +334,7 @@ proportion_wrong<- function(data, significance=0.05){#returns a single value bet
   
 }
 
-proportion_wrong(test, significance=0.01)
+###proportion_wrong(test, significance=0.01)
 
 
 
@@ -344,4 +383,133 @@ proportion_wrong_series<- function(data, significance=0.05){#returns a single va
 
 
 #test it
-proportion_wrong_series(test, significance = 0.1)
+###proportion_wrong_series(test, significance = 0.1)
+
+#proportion significantly wrong under stability time- we're going to define this as 'directionally wrong'
+#where there is a significant relationship that does not match the direction of the true slope
+
+proportion_wrong_before_stability<- function(data, significance=0.05, min_percent=95, error_multiplyer=1){#returns a single value between 0 and 1
+  
+  test<-multiple_breakups(data)
+  count<-nrow(test)
+  true_slope<-test[count,4] #find the slope of the longest series
+  true_p<-test[count,6]
+  
+  #cut out data below threshold
+  threshold<-stability_time(data, min_percent, error_multiplyer)#find stability threshold
+  test1<-test[which(test$N_years<threshold),]
+  count1<-nrow(test1)
+  #case 1: true slope is not significant
+  if (true_p>significance){
+    wrong_windows<-test1[which(test1$p_value<significance),]
+  }else{ #true slope is significant
+    if(true_slope>0){#true slope is positive
+      wrong_windows<-test1[which(test1$slope<0|test1$p_value>significance),]#wrong means the slope is the wrong sign or 0
+    }else{#true slope is negative
+      wrong_windows<-test1[which(test1$slope>0|test1$p_value>significance),]#wrong means the slope is the wrong sign or 0
+    }
+  }
+  count_wrong<-nrow(wrong_windows)
+  proportion<-count_wrong/count1
+  return(proportion)
+  
+}
+
+###proportion_wrong_before_stability(test, significance=0.05)
+
+#implement another charting function that gives the proportion wrong by window length
+
+wrongness_plot<-function(data, significance=0.05, min_percent=95, error_multiplyer=1, title =""){
+  threshold<-stability_time(data, min_percent, error_multiplyer)#find stability threshold
+  wrongness<-proportion_wrong_series(data, significance)
+  maxyears<-max(wrongness$window_length)
+  plot<- ggplot(wrongness) +
+    theme_classic() +
+    geom_vline(xintercept = (threshold-0.1), linetype = 3, color="grey") +
+    geom_smooth(aes(y = proportion_wrong, x = window_length, 
+                    linetype="Propwrong", color="Propwrong"), se=FALSE)+
+    geom_point(aes(y = proportion_wrong, x = window_length, 
+                   shape="Propwrong", fill="Propwrong"), size=3)+
+    geom_smooth(aes(y = avg_r_square, x = window_length, 
+                    linetype="rsq", color="rsq"), se=FALSE)+
+    geom_point(aes(y = avg_r_square, x = window_length, 
+                   shape="rsq", fill="rsq"), size=3)+
+    scale_fill_manual(name="", values=c(Propwrong="black",rsq="orange"),
+                      labels=c("Proportion\n wrong", expression("Average R"^2)))+
+    scale_shape_manual(name="", values=c(Propwrong=21, rsq=24), 
+                       labels=c("Proportion\n wrong", expression("Average R"^2)))+
+    scale_linetype_manual(name="", values=c(Propwrong=1, rsq=2), 
+                          labels=c("Proportion\n wrong", expression("Average R"^2)))+
+    scale_color_manual(name="", values=c(Propwrong="blue", rsq="red"), 
+                       labels=c("Proportion\n wrong", expression("Average R"^2)))+
+    ggtitle(title)+
+    xlab("Number of years in window")+
+    ylab("Average value")+
+    ylim(0,1)
+  return(plot)
+}
+
+#test
+###wrongness_plot(test)
+
+#now for a function that plots all the lines by window length
+
+broken_stick_plot<-function(data, title="", significance=0.05, window_length=3){
+  data1<-standardize(data)#standardize data for data frame
+  out<-multiple_breakups(data)
+  years<-length(unique(out$start_year))
+  maxyears<-max(out$N_years)
+  count<-nrow(out)
+  #compute mean of longest series
+  true_slope<-out[count,4] #find the slope of the longest series
+  true_intercept<-(out[count,7]) #find the intercept of the longest series
+  out<-out[which(out$N_years==window_length),] #only work with one window length per plot
+  #create a separate frame for significant and not results
+  out_sig<-out[which(out$p_value<significance),]
+  countsig<-nrow(out_sig)#count the number of rows in the set we want to plot
+  out_not<-out[which(out$p_value>significance),]
+  countnot<-nrow(out_not)#count the number of rows in the set we want to plot
+  plot<- ggplot(data1, aes(x=year, y=stand.response)) +
+    theme_classic()+geom_smooth(linetype=0, fill="lightblue1", method=lm, formula='y ~ x', 
+                                level=0.99)#99% confidence interval around longest series
+  if(countnot>0){
+    for(i in 1:countnot){ #plot not significant windows
+      slopei<-out_not$slope[i]
+      intercepti<-out_not$intercept[i]
+      plot<-plot+geom_abline(slope=slopei, intercept=intercepti, linetype=3, colour="grey12")
+    }
+  }
+  if(countsig>0){
+    for(i in 1:countsig){ #plot significant windows
+      slopei<-out_sig$slope[i]
+      intercepti<-out_sig$intercept[i]
+      plot<-plot+geom_abline(slope=slopei, intercept=intercepti, linetype=2, colour="red")
+    }
+  }
+
+
+  plot<-plot+ ggtitle(title)+
+    geom_abline(slope=true_slope, intercept=true_intercept, linetype=1, colour="grey16", size=1)+
+    geom_point(size=3, pch=21, fill="grey22")+
+    xlab("Year")+ylab("Z-scaled response")
+  return(plot)
+}
+#test it
+###broken_stick_plot(test, window_length = 4, significance = 0.5)
+
+#let's have a bit of fun and make an animated version of this plot
+library(animation)
+
+
+make_stick_pile_gif<-function(data, significance=0.05){
+  out<-multiple_breakups(data)
+  windows<-unique(out$N_years)#get a list of unique window lengths
+  saveGIF({
+    for (i in 1:length(windows)) {
+      window_length_i<-windows[i]
+      print(broken_stick_plot(data, significance=significance, window_length = window_length_i, 
+                              title=paste("Window length =", window_length_i)))
+    }
+  }) 
+}
+###make_stick_pile_gif(test)
